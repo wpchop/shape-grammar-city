@@ -4,7 +4,7 @@ import * as DAT from 'dat-gui';
 import Icosphere from './geometry/Icosphere';
 import Square from './geometry/Square';
 import Cube from './geometry/Cube';
-import Plant from './geometry/Plant';
+import City from './geometry/City';
 import OpenGLRenderer from './rendering/gl/OpenGLRenderer';
 import Camera from './Camera';
 import {setGL} from './globals';
@@ -27,18 +27,18 @@ const controls = {
 let icosphere: Icosphere;
 let square: Square;
 let cube: Cube;
-let plant: Plant;
+let city: City;
 let count = 0;
 
 let lsystem: LSystem;
 
 function loadScene() {
-  plant = new Plant(vec3.fromValues(0,0,0));
+  city = new City(vec3.fromValues(0,0,0));
 }
 
 function loadLSystem(lsystem: LSystem) {
     lsystem = new LSystem(controls.axiom, controls.iterations);
-    plant = new Plant(vec3.fromValues(0,0,0));
+    city = new City(vec3.fromValues(0,0,0));
     // Expand grammar
     lsystem.expandAxiom(controls.iterations);
   
@@ -47,8 +47,8 @@ function loadLSystem(lsystem: LSystem) {
 
     // Fill mesh
     let turtle : Turtle = new Turtle(col1, col2, controls.iterations);
-    turtle.draw(plant, lsystem.LinkedListToString(lsystem.axiom));
-    plant.create();
+    turtle.draw(city, lsystem.LinkedListToString(lsystem.axiom));
+    city.create();
 }
 
 function main() {
@@ -79,7 +79,7 @@ function main() {
   // Later, we can import `gl` from `globals.ts` to access it
   setGL(gl);
 
-  const camera = new Camera(vec3.fromValues(0, 0, 5), vec3.fromValues(0, 0, 0));
+  const camera = new Camera(vec3.fromValues(30, 20, 30), vec3.fromValues(0, 0, 0));
 
   const renderer = new OpenGLRenderer(canvas);
   renderer.setClearColor(0.60, 0.80, 0.95, 1);
@@ -103,7 +103,7 @@ function main() {
     let col: vec4 = vec4.fromValues(controls.branch[0]/255,controls.branch[1]/255,controls.branch[2]/255, 1.0);
     let shader = lambert;
     renderer.render(camera, shader, col, count, [
-      plant,
+      city,
     ]);
     stats.end();
 

@@ -31,6 +31,36 @@ class LinkedList {
     }
 }
 
+class Rule {
+    symbol: string;
+    map: {[input: string] : number} = {};
+
+    constructor(symbol: string) {
+        this.symbol = symbol;   
+    }
+    
+    addRule(nextSymbol: string, p : number) {
+        this.map[nextSymbol] = p;
+    }
+
+    getNextSymbol() : string {
+        let aProb = this.map["A"];
+        let bProb = aProb + this.map["B"];
+        let cProb = bProb + this.map["C"];
+        let dProb = cProb + this.map["D"];
+        let rn = Math.random();
+        if (rn < aProb) {
+            return "A";
+        } else if (rn < bProb) {
+            return "B";
+        } else if (rn < cProb) {
+            return "C";
+        } else {
+            return "D";
+        }
+    }
+}
+
 export function stringToLinkedList(string: string) {
     let link: LinkedList = new LinkedList();
     // console.log(string);
@@ -44,16 +74,46 @@ export function stringToLinkedList(string: string) {
 export class LSystem {
     axiom: LinkedList;
     iterations: number;
-    rules: {[input: string] : string} = {};
+    rules: {[input: string] : Rule} = {};
     outputString: LinkedList;
 
     initRules() {
-        this.rules["X"] = "F-[[X]+X]+F[+FX]-X";
-        this.rules["F"] = "FF";
-        this.rules["A"] = "B[A][A][A]A";
-        this.rules["C"] = "B[A][A]A";
-        this.rules["D"] = "B[A][A][A][A]A";
-        this.rules["B"] = "BB";
+        let baseRule: Rule = new Rule("");
+        baseRule.addRule("A", 0.25);
+        baseRule.addRule("B", 0.25);
+        baseRule.addRule("C", 0.25);
+        baseRule.addRule("D", 0.25);
+        
+
+        let arule: Rule = new Rule("A");
+        arule.addRule("A", .5);
+        arule.addRule("B", 0.2);
+        arule.addRule("C", .2);
+        arule.addRule("D", .1);        
+
+        let brule: Rule = new Rule("B");
+        brule.addRule("A", 0.2);        
+        brule.addRule("B", 0.2);
+        brule.addRule("C", 0.2);
+        brule.addRule("D", 0.2);
+
+        let crule: Rule = new Rule("C");
+        crule.addRule("A", 0.4);
+        crule.addRule("B", 0.1);
+        crule.addRule("C", 0.3);
+        crule.addRule("D", 0.2);        
+
+        let drule: Rule = new Rule("D");
+        drule.addRule("A", 0.4);
+        drule.addRule("B", 0);
+        drule.addRule("C", 0);        
+        drule.addRule("D", 0.6);
+        
+
+        this.rules["A"] = arule;
+        this.rules["C"] = brule;
+        this.rules["D"] = crule;
+        this.rules["B"] = drule;
     }
 
     constructor(axiom: string, iter: number) {
@@ -68,21 +128,15 @@ export class LSystem {
         if (count === 0) {
             return;
         } else {
-            let curr = this.axiom.head;
-            // debugger;
-            while (curr !== null) {
-                let currChar: string = curr.symbol;
-                let temp = curr.next;
-                if (this.rules[currChar] !== undefined) {
-                    console.log(currChar);
-                    let ruleLL = stringToLinkedList(this.rules[currChar]);
-                    curr.symbol = ruleLL.head.symbol;
-                    curr.next = ruleLL.head.next;
-                    ruleLL.tail.next = temp;
-                }
-                curr = temp;
+            let lastSymbol = "";
+            if (this.axiom.tail !== null) {
+                lastSymbol = this.axiom.tail.symbol;
             }
-            this.expandAxiom(count - 1);
+            let nextSymbol = this.rules[lastSymbol].getNextSymbol();
+            let nextNode: LNode = new LNode(nextSymbol);
+            this.axiom.append(nextNode);
+            count--;
+            this.expandAxiom(count);
         }
     }
 

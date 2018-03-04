@@ -2,11 +2,11 @@ import {vec3, vec4} from 'gl-matrix';
 import Drawable from '../rendering/gl/Drawable';
 import {gl} from '../globals';
 
-class Plant extends Drawable {
-  plantIndices: number[];
-  plantPositions: number[];
-  plantNormals: number[];
-  plantColors: number [];
+class City extends Drawable {
+  cityIndices: number[];
+  cityPositions: number[];
+  cityNormals: number[];
+  cityColors: number [];
 
   indices: Uint32Array;
   positions: Float32Array;
@@ -16,19 +16,19 @@ class Plant extends Drawable {
 
   constructor(center: vec3) {
     super(); // Call the constructor of the super class. This is required.
-    this.plantIndices = [];
-    this.plantPositions = [];
-    this.plantNormals = [];
-    this.plantColors = [];
+    this.cityIndices = [];
+    this.cityPositions = [];
+    this.cityNormals = [];
+    this.cityColors = [];
     this.center = vec4.fromValues(center[0], center[1], center[2], 1);
   }
 
   create() {
 
-    this.indices = Uint32Array.from(this.plantIndices);
-    this.normals = Float32Array.from(this.plantNormals);
-    this.positions = Float32Array.from(this.plantPositions);
-    this.colors = Float32Array.from(this.plantColors);
+    this.indices = Uint32Array.from(this.cityIndices);
+    this.normals = Float32Array.from(this.cityNormals);
+    this.positions = Float32Array.from(this.cityPositions);
+    this.colors = Float32Array.from(this.cityColors);
 
     this.generateIdx();
     this.generatePos();
@@ -48,8 +48,8 @@ class Plant extends Drawable {
     gl.bindBuffer(gl.ARRAY_BUFFER, this.bufCol);
     gl.bufferData(gl.ARRAY_BUFFER, this.colors, gl.STATIC_DRAW);
 
-    console.log(`Created plant`);
+    console.log(`Created city`);
   }
 };
 
-export default Plant;
+export default City;
