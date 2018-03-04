@@ -78,18 +78,17 @@ export class LSystem {
     outputString: LinkedList;
 
     initRules() {
-        let baseRule: Rule = new Rule("");
+        let baseRule: Rule = new Rule(" ");
         baseRule.addRule("A", 0.25);
         baseRule.addRule("B", 0.25);
         baseRule.addRule("C", 0.25);
         baseRule.addRule("D", 0.25);
-        
 
         let arule: Rule = new Rule("A");
-        arule.addRule("A", .5);
-        arule.addRule("B", 0.2);
-        arule.addRule("C", .2);
-        arule.addRule("D", .1);        
+        arule.addRule("A", 0.2);
+        arule.addRule("B", 0.3);
+        arule.addRule("C", 0.4);
+        arule.addRule("D", 0.1);        
 
         let brule: Rule = new Rule("B");
         brule.addRule("A", 0.2);        
@@ -114,6 +113,7 @@ export class LSystem {
         this.rules["C"] = brule;
         this.rules["D"] = crule;
         this.rules["B"] = drule;
+        this.rules[" "] = baseRule;
     }
 
     constructor(axiom: string, iter: number) {
@@ -128,8 +128,8 @@ export class LSystem {
         if (count === 0) {
             return;
         } else {
-            let lastSymbol = "";
-            if (this.axiom.tail !== null) {
+            let lastSymbol = " ";
+            if (this.axiom.tail.symbol !== null) {
                 lastSymbol = this.axiom.tail.symbol;
             }
             let nextSymbol = this.rules[lastSymbol].getNextSymbol();
@@ -138,6 +138,12 @@ export class LSystem {
             count--;
             this.expandAxiom(count);
         }
+    }
+
+    getAxiom(count: number) {
+        this.axiom = stringToLinkedList(" ");
+        this.expandAxiom(count);
+        return this.LinkedListToString(this.axiom);
     }
 
     // mostly for debugging purposes

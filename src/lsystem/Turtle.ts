@@ -117,7 +117,7 @@ export class Turtle {
 
 
     this.turtleStack = [];
-    this.turtleStack.push(new TurtleState(vec3.fromValues(0,-2,0), quat.create(), 0));
+    this.turtleStack.push(new TurtleState(vec3.fromValues(0,0,0), quat.create(), 0));
 
     this.turtleState = new TurtleState(vec3.fromValues(0,-2,0), quat.create(), 0);
     
@@ -190,12 +190,14 @@ export class Turtle {
 
     let transformLocal : mat4 = mat4.create();
     mat4.fromTranslation(transformLocal, position);
-
+    
     mat4.fromScaling(this.scale, vec3.fromValues(1,1,1));    
     mat4.fromQuat(this.rotate, this.turtleStack[this.turtleStack.length - 1].q);
     mat4.fromTranslation(this.translate, this.turtleStack[this.turtleStack.length - 1].position);
     mat4.multiply(transform, this.translate, this.rotate);
     mat4.multiply(transform, transform, this.scale);
+
+    mat4.multiply(transform, transform, transformLocal);
 
     return transform;
   }
@@ -214,8 +216,7 @@ export class Turtle {
       vec3.fromValues(localPos[0], localPos[1], localPos[2]);
   }
 
-  draw(city: City, string: string) {
-    let position = vec3.fromValues(0,5,0);
+  draw(city: City, string: string, position: vec3) {
     for (let x = 0; x < string.length; x++) {
       let currChar = string.charAt(x);
       let topTurtle = this.turtleStack[this.turtleStack.length - 1];
@@ -297,6 +298,9 @@ export class Turtle {
         this.updateTurtlePosition(pos);
       }
     }
+    
+    this.turtleStack[this.turtleStack.length - 1].position = 
+      vec3.fromValues(0,0,0);
   }
 
   drawFloor(city: City) {
@@ -319,10 +323,10 @@ export class Turtle {
 
     let W = 100;
     
-    city.cityPositions.push( W,-2, W,1);
-    city.cityPositions.push(-W,-2, W,1);
-    city.cityPositions.push(-W,-2,-W,1);
-    city.cityPositions.push( W,-2,-W,1);
+    city.cityPositions.push( W, 0, W,1);
+    city.cityPositions.push(-W, 0, W,1);
+    city.cityPositions.push(-W, 0,-W,1);
+    city.cityPositions.push( W, 0,-W,1);
 
     city.cityNormals.push(0,1,0,0);
     city.cityNormals.push(0,1,0,0);

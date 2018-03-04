@@ -21,7 +21,7 @@ const controls = {
   branch: [150.0, 150.0, 160.0],
   leaf: [33.0, 100.0, 240.0],
   shader: 'lambert',
-  iterations: 8,
+  iterations: 5,
 };
 
 let icosphere: Icosphere;
@@ -37,7 +37,8 @@ function loadScene() {
 }
 
 function loadLSystem(lsystem: LSystem) {
-    lsystem = new LSystem(controls.axiom, controls.iterations);
+    let str = " ";
+    lsystem = new LSystem(str, controls.iterations);
     city = new City(vec3.fromValues(0,0,0));
     // Expand grammar
     lsystem.expandAxiom(controls.iterations);
@@ -48,7 +49,12 @@ function loadLSystem(lsystem: LSystem) {
     // Fill mesh
     let turtle : Turtle = new Turtle(col1, col2, controls.iterations);
     turtle.drawFloor(city);
-    turtle.draw(city, lsystem.LinkedListToString(lsystem.axiom));
+    let pos1 = vec3.fromValues(0,0,0);
+    let pos2 = vec3.fromValues(3,0,0);
+    let h = controls.iterations;
+    turtle.draw(city, lsystem.getAxiom(h), pos1);
+    turtle.draw(city, lsystem.getAxiom(h), pos2);
+
     city.create();
 }
 
