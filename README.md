@@ -7,6 +7,8 @@
 
 [demo](https://wpchop.github.io/shape-grammar-city/)
 
+![](./img/cityscape.png)
+
 #### Approach
 I started with my [l-system](https://github.com/wpchop/homework-4-l-systems-wpchop) code and started modifying the way the axioms were constructed and drawn. I added new rules that I defined for my own building. Each building starts off with an empty string, and a map of proabilities for each additional level. There were 5 rule-mappings. For each possible previous level, I had a map to the subsequent levels with a map of probabilities. I would generate axioms of different lengths, and this corresponded to how high the building would be.
 To draw the rules, I would draw the building based on the characters. A was a solid floor, B and C corresponded to two walls, D corresponded to two thin columns. 
