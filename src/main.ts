@@ -11,13 +11,13 @@ import {setGL} from './globals';
 import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 import LSystem from './lsystem/LSystem';
 import Turtle from './lsystem/Turtle';
+import Perlin from './Perlin';
 
 // Define an object with application parameters and button callbacks
 // This will be referred to by dat.GUI's functions that add GUI elements.
 const controls = {
   tesselations: 5,
   'Load Scene': loadScene, // A function pointer, essentially
-  axiom: 'A',
   branch: [150.0, 150.0, 160.0],
   leaf: [33.0, 100.0, 240.0],
   shader: 'lambert',
@@ -31,6 +31,7 @@ let city: City;
 let count = 0;
 
 let lsystem: LSystem;
+let perlin: Perlin;
 
 function loadScene() {
   city = new City(vec3.fromValues(0,0,0));
@@ -49,11 +50,47 @@ function loadLSystem(lsystem: LSystem) {
     // Fill mesh
     let turtle : Turtle = new Turtle(col1, col2, controls.iterations);
     turtle.drawFloor(city);
-    let pos1 = vec3.fromValues(0,0,0);
-    let pos2 = vec3.fromValues(3,0,0);
-    let h = controls.iterations;
-    turtle.draw(city, lsystem.getAxiom(h), pos1);
-    turtle.draw(city, lsystem.getAxiom(h), pos2);
+
+    perlin = new Perlin();
+
+    for (let x = -100; x < 100; x+= 10) {
+      for (let y = -100; y < 100; y+= 10) {
+        let pos = vec3.fromValues(x, 0 ,y);
+        let noiseSample = perlin.PerlinNoise(x / 2, y / 2, 0.1);
+        let height = Math.floor(noiseSample * 5);
+
+        let xAbs = Math.abs(x);
+        let yAbs = Math.abs(y);
+        let dist = 2 * (1 - ((xAbs + yAbs) / 200)); 
+        height = Math.floor(height + dist);
+
+        if (xAbs + yAbs < 30) {
+          height += Math.floor(10 * Math.random() + noiseSample * 10);
+        }
+
+        if (xAbs + yAbs < 60) {
+          height += Math.floor(5 * Math.random() + noiseSample * 5);
+        }
+
+        if (xAbs + yAbs < 100) {
+          height += Math.floor(4 * Math.random() + noiseSample * 4);
+        }
+
+        let scale = vec3.fromValues(1,1,1);
+        console.log(height);
+
+        let sx = Math.random() * 3;
+        let sz = Math.random() * 3;
+
+        let r = sz / 3 * 0.55;
+        let g = sx / 3 * 0.4 + 0.3;
+        let b = noiseSample * 0.5 + Math.random() * 0.3 + 0.2;
+        let color = vec4.fromValues(r, g, b, 1);
+
+        vec3.add(scale, scale, vec3.fromValues(sx, 0, sz));
+        turtle.draw(city, lsystem.getAxiom(height), pos, scale, color);
+      }
+    }
 
     city.create();
 }
@@ -71,7 +108,6 @@ function main() {
   const gui = new DAT.GUI();
   gui.add(controls, 'tesselations', 0, 8).step(1);
   gui.add(controls, 'Load Scene');
-  let axiom = gui.add(controls, 'axiom');
   let iterations = gui.add(controls, 'iterations', 1, 6).step(1);
   let branch = gui.addColor(controls, 'branch');
   let leaf = gui.addColor(controls, 'leaf')
@@ -86,7 +122,7 @@ function main() {
   // Later, we can import `gl` from `globals.ts` to access it
   setGL(gl);
 
-  const camera = new Camera(vec3.fromValues(30, 20, 30), vec3.fromValues(0, 0, 0));
+  const camera = new Camera(vec3.fromValues(80, 40, 80), vec3.fromValues(0, 20, 0));
 
   const renderer = new OpenGLRenderer(canvas);
   renderer.setClearColor(0.60, 0.80, 0.95, 1);
@@ -127,11 +163,6 @@ function main() {
   renderer.setSize(window.innerWidth, window.innerHeight);
   camera.setAspectRatio(window.innerWidth / window.innerHeight);
   camera.updateProjectionMatrix();
-
-  axiom.onFinishChange(function(value: string) {
-    renderer.clear();
-    loadLSystem(lsystem);  
-  });
 
   iterations.onFinishChange(function(value: any) {
     renderer.clear();

@@ -85,13 +85,13 @@ export class LSystem {
         baseRule.addRule("D", 0.25);
 
         let arule: Rule = new Rule("A");
-        arule.addRule("A", 0.2);
+        arule.addRule("A", 0.3);
         arule.addRule("B", 0.3);
-        arule.addRule("C", 0.4);
+        arule.addRule("C", 0.3);
         arule.addRule("D", 0.1);        
 
         let brule: Rule = new Rule("B");
-        brule.addRule("A", 0.2);        
+        brule.addRule("A", 0.4);        
         brule.addRule("B", 0.2);
         brule.addRule("C", 0.2);
         brule.addRule("D", 0.2);
@@ -103,10 +103,10 @@ export class LSystem {
         crule.addRule("D", 0.2);        
 
         let drule: Rule = new Rule("D");
-        drule.addRule("A", 0.4);
+        drule.addRule("A", 0.5);
         drule.addRule("B", 0);
         drule.addRule("C", 0);        
-        drule.addRule("D", 0.6);
+        drule.addRule("D", 0.5);
         
 
         this.rules["A"] = arule;

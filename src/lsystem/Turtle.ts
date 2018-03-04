@@ -129,7 +129,7 @@ export class Turtle {
 
   }
 
-  applyMatrix(city: City, transform: mat4, isLeaf: boolean) {
+  applyMatrix(city: City, transform: mat4, isLeaf: boolean, color: vec4) {
     let turtleIdx = this.turtleIndices.length;
     let cityIdxLength = city.cityIndices.length;
     let idxNum = city.cityIndices[cityIdxLength - 1];
@@ -172,12 +172,9 @@ export class Turtle {
       city.cityPositions.push(pos[2]);
       city.cityPositions.push(pos[3]);
     }
-    let color = vec4.create();
   
     if (!isLeaf) {
       color = this.branchCol;
-    } else {
-      color = this.leafCol
     }
 
     for (let i = 0; i < this.turtlePositions.length - 1; i+=4) {
@@ -185,19 +182,19 @@ export class Turtle {
     }
   }
 
-  getMatrix(position: vec3) {
+  getMatrix(position: vec3, scale: vec3) {
     let transform : mat4 = mat4.create();
 
     let transformLocal : mat4 = mat4.create();
     mat4.fromTranslation(transformLocal, position);
     
-    mat4.fromScaling(this.scale, vec3.fromValues(1,1,1));    
+    mat4.fromScaling(this.scale, scale);    
     mat4.fromQuat(this.rotate, this.turtleStack[this.turtleStack.length - 1].q);
     mat4.fromTranslation(this.translate, this.turtleStack[this.turtleStack.length - 1].position);
     mat4.multiply(transform, this.translate, this.rotate);
     mat4.multiply(transform, transform, this.scale);
 
-    mat4.multiply(transform, transform, transformLocal);
+    mat4.multiply(transform, transformLocal, transform);
 
     return transform;
   }
@@ -216,7 +213,7 @@ export class Turtle {
       vec3.fromValues(localPos[0], localPos[1], localPos[2]);
   }
 
-  draw(city: City, string: string, position: vec3) {
+  draw(city: City, string: string, position: vec3, scale: vec3, color: vec4) {
     for (let x = 0; x < string.length; x++) {
       let currChar = string.charAt(x);
       let topTurtle = this.turtleStack[this.turtleStack.length - 1];
@@ -225,9 +222,9 @@ export class Turtle {
         let transformLocal = mat4.create();
         mat4.fromTranslation(transformLocal,[0,1,0]);
 
-        let transform = this.getMatrix(position);
+        let transform = this.getMatrix(position, scale);
         mat4.multiply(transform, transform, transformLocal);
-        this.applyMatrix(city, transform, true);
+        this.applyMatrix(city, transform, true, color);
 
         // update turtlestate position
         let pos = vec4.fromValues(0,2,0,1);
@@ -241,15 +238,15 @@ export class Turtle {
         mat4.fromScaling(localScale, [0.1,1,1]);
 
         mat4.multiply(transformLocal, transformLocal, localScale);
-        let transform1 = this.getMatrix(position);
+        let transform1 = this.getMatrix(position, scale);
         let transform = transform1;
         mat4.multiply(transform, transform, transformLocal);
-        this.applyMatrix(city, transform, true);
+        this.applyMatrix(city, transform, true, color);
 
         mat4.fromTranslation(transformLocal,[-0.9,1,0]);
         mat4.multiply(transformLocal, transformLocal, localScale);
-        mat4.multiply(transform, this.getMatrix(position), transformLocal);
-        this.applyMatrix(city, transform, true);
+        mat4.multiply(transform, this.getMatrix(position, scale), transformLocal);
+        this.applyMatrix(city, transform, true, color);
 
         // update turtlestate position
         let pos = vec4.fromValues(0,2,0,1);
@@ -262,15 +259,15 @@ export class Turtle {
         mat4.fromScaling(localScale, [1,1,0.1]);
 
         mat4.multiply(transformLocal, transformLocal, localScale);
-        let transform1 = this.getMatrix(position);
+        let transform1 = this.getMatrix(position, scale);
         let transform = transform1;
         mat4.multiply(transform, transform, transformLocal);
-        this.applyMatrix(city, transform, true);
+        this.applyMatrix(city, transform, true, color);
 
         mat4.fromTranslation(transformLocal,[0,1,-0.9]);
         mat4.multiply(transformLocal, transformLocal, localScale);
-        mat4.multiply(transform, this.getMatrix(position), transformLocal);
-        this.applyMatrix(city, transform, true);
+        mat4.multiply(transform, this.getMatrix(position, scale), transformLocal);
+        this.applyMatrix(city, transform, true, color);
 
         // update turtlestate position
         let pos = vec4.fromValues(0,2,0,1);
@@ -283,15 +280,15 @@ export class Turtle {
         mat4.fromScaling(localScale, [0.1,1,0.1]);
 
         mat4.multiply(transformLocal, transformLocal, localScale);
-        let transform1 = this.getMatrix(position);
+        let transform1 = this.getMatrix(position, scale);
         let transform = transform1;
         mat4.multiply(transform, transform, transformLocal);
-        this.applyMatrix(city, transform, true);
+        this.applyMatrix(city, transform, true, color);
 
         mat4.fromTranslation(transformLocal,[-0.9,1,-0.9]);
         mat4.multiply(transformLocal, transformLocal, localScale);
-        mat4.multiply(transform, this.getMatrix(position), transformLocal);
-        this.applyMatrix(city, transform, true);
+        mat4.multiply(transform, this.getMatrix(position, scale), transformLocal);
+        this.applyMatrix(city, transform, true, color);
 
         // update turtlestate position
         let pos = vec4.fromValues(0,2,0,1);
@@ -311,9 +308,8 @@ export class Turtle {
     mat4.fromScaling(localScale, [100,0.1,100]);
 
     mat4.multiply(transformLocal, transformLocal, localScale);
-    let transform = this.getMatrix(vec3.fromValues(0,0,0));
+    let transform = this.getMatrix(vec3.fromValues(0,0,0), vec3.fromValues(2,1,2));
     mat4.multiply(transform, transform, transformLocal);
-    // this.applyMatrix(city, transform, true);
 
     let color = this.branchCol;
     city.cityColors.push(color[0], color[1], color[2], color[3]);
@@ -321,7 +317,7 @@ export class Turtle {
     city.cityColors.push(color[0], color[1], color[2], color[3]);
     city.cityColors.push(color[0], color[1], color[2], color[3]);
 
-    let W = 100;
+    let W = 200;
     
     city.cityPositions.push( W, 0, W,1);
     city.cityPositions.push(-W, 0, W,1);
