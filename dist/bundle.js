@@ -3303,13 +3303,15 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_stats_js___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_stats_js__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_dat_gui__ = __webpack_require__(25);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_dat_gui___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_dat_gui__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__geometry_Plant__ = __webpack_require__(28);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__geometry_City__ = __webpack_require__(28);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__rendering_gl_OpenGLRenderer__ = __webpack_require__(30);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__Camera__ = __webpack_require__(31);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__globals__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__rendering_gl_ShaderProgram__ = __webpack_require__(64);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__lsystem_LSystem__ = __webpack_require__(65);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__lsystem_Turtle__ = __webpack_require__(66);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__Perlin__ = __webpack_require__(67);
+
 
 
 
@@ -3325,32 +3327,64 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 const controls = {
     tesselations: 5,
     'Load Scene': loadScene,
-    axiom: 'A',
-    branch: [108.0, 186.0, 115.0],
-    leaf: [133.0, 108.0, 187.0],
+    branch: [150.0, 150.0, 160.0],
+    leaf: [33.0, 100.0, 240.0],
     shader: 'lambert',
-    iterations: 4,
+    iterations: 5,
 };
 let icosphere;
 let square;
 let cube;
-let plant;
+let city;
 let count = 0;
 let lsystem;
+let perlin;
 function loadScene() {
-    plant = new __WEBPACK_IMPORTED_MODULE_3__geometry_Plant__["a" /* default */](__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].fromValues(0, 0, 0));
+    city = new __WEBPACK_IMPORTED_MODULE_3__geometry_City__["a" /* default */](__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].fromValues(0, 0, 0));
 }
 function loadLSystem(lsystem) {
-    lsystem = new __WEBPACK_IMPORTED_MODULE_8__lsystem_LSystem__["a" /* default */](controls.axiom, controls.iterations);
-    plant = new __WEBPACK_IMPORTED_MODULE_3__geometry_Plant__["a" /* default */](__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].fromValues(0, 0, 0));
+    let str = " ";
+    lsystem = new __WEBPACK_IMPORTED_MODULE_8__lsystem_LSystem__["a" /* default */](str, controls.iterations);
+    city = new __WEBPACK_IMPORTED_MODULE_3__geometry_City__["a" /* default */](__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].fromValues(0, 0, 0));
     // Expand grammar
     lsystem.expandAxiom(controls.iterations);
     let col1 = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec4 */].fromValues(controls.branch[0] / 255, controls.branch[1] / 255, controls.branch[2] / 255, 1.0);
     let col2 = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec4 */].fromValues(controls.leaf[0] / 255, controls.leaf[1] / 255, controls.leaf[2] / 255, 1.0);
     // Fill mesh
     let turtle = new __WEBPACK_IMPORTED_MODULE_9__lsystem_Turtle__["a" /* default */](col1, col2, controls.iterations);
-    turtle.draw(plant, lsystem.LinkedListToString(lsystem.axiom));
-    plant.create();
+    turtle.drawFloor(city);
+    perlin = new __WEBPACK_IMPORTED_MODULE_10__Perlin__["a" /* default */]();
+    for (let x = -100; x < 100; x += 10) {
+        for (let y = -100; y < 100; y += 10) {
+            let pos = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].fromValues(x, 0, y);
+            let noiseSample = perlin.PerlinNoise(x / 2, y / 2, 0.1);
+            let height = Math.floor(noiseSample * 5);
+            let xAbs = Math.abs(x);
+            let yAbs = Math.abs(y);
+            let dist = 2 * (1 - ((xAbs + yAbs) / 200));
+            height = Math.floor(height + dist);
+            if (xAbs + yAbs < 30) {
+                height += Math.floor(10 * Math.random() + noiseSample * 10);
+            }
+            if (xAbs + yAbs < 60) {
+                height += Math.floor(5 * Math.random() + noiseSample * 5);
+            }
+            if (xAbs + yAbs < 100) {
+                height += Math.floor(4 * Math.random() + noiseSample * 4);
+            }
+            let scale = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].fromValues(1, 1, 1);
+            console.log(height);
+            let sx = Math.random() * 3;
+            let sz = Math.random() * 3;
+            let r = sz / 3 * 0.55;
+            let g = sx / 3 * 0.4 + 0.3;
+            let b = noiseSample * 0.5 + Math.random() * 0.3 + 0.2;
+            let color = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec4 */].fromValues(r, g, b, 1);
+            __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].add(scale, scale, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].fromValues(sx, 0, sz));
+            turtle.draw(city, lsystem.getAxiom(height), pos, scale, color);
+        }
+    }
+    city.create();
 }
 function main() {
     // Initial display for framerate
@@ -3364,7 +3398,6 @@ function main() {
     const gui = new __WEBPACK_IMPORTED_MODULE_2_dat_gui__["GUI"]();
     gui.add(controls, 'tesselations', 0, 8).step(1);
     gui.add(controls, 'Load Scene');
-    let axiom = gui.add(controls, 'axiom');
     let iterations = gui.add(controls, 'iterations', 1, 6).step(1);
     let branch = gui.addColor(controls, 'branch');
     let leaf = gui.addColor(controls, 'leaf');
@@ -3377,13 +3410,13 @@ function main() {
     // `setGL` is a function imported above which sets the value of `gl` in the `globals.ts` module.
     // Later, we can import `gl` from `globals.ts` to access it
     Object(__WEBPACK_IMPORTED_MODULE_6__globals__["b" /* setGL */])(gl);
-    const camera = new __WEBPACK_IMPORTED_MODULE_5__Camera__["a" /* default */](__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].fromValues(0, 0, 5), __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].fromValues(0, 0, 0));
+    const camera = new __WEBPACK_IMPORTED_MODULE_5__Camera__["a" /* default */](__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].fromValues(80, 40, 80), __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].fromValues(0, 20, 0));
     const renderer = new __WEBPACK_IMPORTED_MODULE_4__rendering_gl_OpenGLRenderer__["a" /* default */](canvas);
     renderer.setClearColor(0.60, 0.80, 0.95, 1);
     gl.enable(gl.DEPTH_TEST);
     const lambert = new __WEBPACK_IMPORTED_MODULE_7__rendering_gl_ShaderProgram__["b" /* default */]([
-        new __WEBPACK_IMPORTED_MODULE_7__rendering_gl_ShaderProgram__["a" /* Shader */](gl.VERTEX_SHADER, __webpack_require__(67)),
-        new __WEBPACK_IMPORTED_MODULE_7__rendering_gl_ShaderProgram__["a" /* Shader */](gl.FRAGMENT_SHADER, __webpack_require__(68)),
+        new __WEBPACK_IMPORTED_MODULE_7__rendering_gl_ShaderProgram__["a" /* Shader */](gl.VERTEX_SHADER, __webpack_require__(68)),
+        new __WEBPACK_IMPORTED_MODULE_7__rendering_gl_ShaderProgram__["a" /* Shader */](gl.FRAGMENT_SHADER, __webpack_require__(69)),
     ]);
     // Make LSystem
     loadLSystem(lsystem);
@@ -3397,7 +3430,7 @@ function main() {
         let col = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec4 */].fromValues(controls.branch[0] / 255, controls.branch[1] / 255, controls.branch[2] / 255, 1.0);
         let shader = lambert;
         renderer.render(camera, shader, col, count, [
-            plant,
+            city,
         ]);
         stats.end();
         // Tell the browser to call `tick` again whenever it renders a new frame
@@ -3411,10 +3444,6 @@ function main() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     camera.setAspectRatio(window.innerWidth / window.innerHeight);
     camera.updateProjectionMatrix();
-    axiom.onFinishChange(function (value) {
-        renderer.clear();
-        loadLSystem(lsystem);
-    });
     iterations.onFinishChange(function (value) {
         renderer.clear();
         loadLSystem(lsystem);
@@ -11929,20 +11958,20 @@ dat.utils.common);
 
 
 
-class Plant extends __WEBPACK_IMPORTED_MODULE_1__rendering_gl_Drawable__["a" /* default */] {
+class City extends __WEBPACK_IMPORTED_MODULE_1__rendering_gl_Drawable__["a" /* default */] {
     constructor(center) {
         super(); // Call the constructor of the super class. This is required.
-        this.plantIndices = [];
-        this.plantPositions = [];
-        this.plantNormals = [];
-        this.plantColors = [];
+        this.cityIndices = [];
+        this.cityPositions = [];
+        this.cityNormals = [];
+        this.cityColors = [];
         this.center = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec4 */].fromValues(center[0], center[1], center[2], 1);
     }
     create() {
-        this.indices = Uint32Array.from(this.plantIndices);
-        this.normals = Float32Array.from(this.plantNormals);
-        this.positions = Float32Array.from(this.plantPositions);
-        this.colors = Float32Array.from(this.plantColors);
+        this.indices = Uint32Array.from(this.cityIndices);
+        this.normals = Float32Array.from(this.cityNormals);
+        this.positions = Float32Array.from(this.cityPositions);
+        this.colors = Float32Array.from(this.cityColors);
         this.generateIdx();
         this.generatePos();
         this.generateNor();
@@ -11956,11 +11985,11 @@ class Plant extends __WEBPACK_IMPORTED_MODULE_1__rendering_gl_Drawable__["a" /* 
         __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].bufferData(__WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].ARRAY_BUFFER, this.positions, __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].STATIC_DRAW);
         __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].bindBuffer(__WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].ARRAY_BUFFER, this.bufCol);
         __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].bufferData(__WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].ARRAY_BUFFER, this.colors, __WEBPACK_IMPORTED_MODULE_2__globals__["a" /* gl */].STATIC_DRAW);
-        console.log(`Created plant`);
+        console.log(`Created city`);
     }
 }
 ;
-/* harmony default export */ __webpack_exports__["a"] = (Plant);
+/* harmony default export */ __webpack_exports__["a"] = (City);
 
 
 /***/ }),
@@ -15260,6 +15289,34 @@ class LinkedList {
         this.tail = node;
     }
 }
+class Rule {
+    constructor(symbol) {
+        this.map = {};
+        this.symbol = symbol;
+    }
+    addRule(nextSymbol, p) {
+        this.map[nextSymbol] = p;
+    }
+    getNextSymbol() {
+        let aProb = this.map["A"];
+        let bProb = aProb + this.map["B"];
+        let cProb = bProb + this.map["C"];
+        let dProb = cProb + this.map["D"];
+        let rn = Math.random();
+        if (rn < aProb) {
+            return "A";
+        }
+        else if (rn < bProb) {
+            return "B";
+        }
+        else if (rn < cProb) {
+            return "C";
+        }
+        else {
+            return "D";
+        }
+    }
+}
 function stringToLinkedList(string) {
     let link = new LinkedList();
     // console.log(string);
@@ -15278,12 +15335,36 @@ class LSystem {
         this.outputString = new LinkedList();
     }
     initRules() {
-        this.rules["X"] = "F-[[X]+X]+F[+FX]-X";
-        this.rules["F"] = "FF";
-        this.rules["A"] = "B[A][A][A]A";
-        this.rules["C"] = "B[A][A]A";
-        this.rules["D"] = "B[A][A][A][A]A";
-        this.rules["B"] = "BB";
+        let baseRule = new Rule(" ");
+        baseRule.addRule("A", 0.25);
+        baseRule.addRule("B", 0.25);
+        baseRule.addRule("C", 0.25);
+        baseRule.addRule("D", 0.25);
+        let arule = new Rule("A");
+        arule.addRule("A", 0.3);
+        arule.addRule("B", 0.3);
+        arule.addRule("C", 0.3);
+        arule.addRule("D", 0.1);
+        let brule = new Rule("B");
+        brule.addRule("A", 0.4);
+        brule.addRule("B", 0.2);
+        brule.addRule("C", 0.2);
+        brule.addRule("D", 0.2);
+        let crule = new Rule("C");
+        crule.addRule("A", 0.4);
+        crule.addRule("B", 0.1);
+        crule.addRule("C", 0.3);
+        crule.addRule("D", 0.2);
+        let drule = new Rule("D");
+        drule.addRule("A", 0.5);
+        drule.addRule("B", 0);
+        drule.addRule("C", 0);
+        drule.addRule("D", 0.5);
+        this.rules["A"] = arule;
+        this.rules["C"] = brule;
+        this.rules["D"] = crule;
+        this.rules["B"] = drule;
+        this.rules[" "] = baseRule;
     }
     // Expand axiom for number of iterations
     expandAxiom(count) {
@@ -15291,22 +15372,21 @@ class LSystem {
             return;
         }
         else {
-            let curr = this.axiom.head;
-            // debugger;
-            while (curr !== null) {
-                let currChar = curr.symbol;
-                let temp = curr.next;
-                if (this.rules[currChar] !== undefined) {
-                    console.log(currChar);
-                    let ruleLL = stringToLinkedList(this.rules[currChar]);
-                    curr.symbol = ruleLL.head.symbol;
-                    curr.next = ruleLL.head.next;
-                    ruleLL.tail.next = temp;
-                }
-                curr = temp;
+            let lastSymbol = " ";
+            if (this.axiom.tail.symbol !== null) {
+                lastSymbol = this.axiom.tail.symbol;
             }
-            this.expandAxiom(count - 1);
+            let nextSymbol = this.rules[lastSymbol].getNextSymbol();
+            let nextNode = new LNode(nextSymbol);
+            this.axiom.append(nextNode);
+            count--;
+            this.expandAxiom(count);
         }
+    }
+    getAxiom(count) {
+        this.axiom = stringToLinkedList(" ");
+        this.expandAxiom(count);
+        return this.LinkedListToString(this.axiom);
     }
     // mostly for debugging purposes
     LinkedListToString(list) {
@@ -15368,21 +15448,22 @@ class Turtle {
         this.rotate = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].create();
         this.scale = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].create();
         this.turtleStack = [];
-        this.turtleStack.push(new TurtleState(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].fromValues(0, -2, 0), __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["b" /* quat */].create(), 0));
+        this.turtleStack.push(new TurtleState(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].fromValues(0, 0, 0), __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["b" /* quat */].create(), 0));
+        this.turtleState = new TurtleState(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].fromValues(0, -2, 0), __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["b" /* quat */].create(), 0);
         this.branchCol = branchCol;
         this.leafCol = leafCol;
         this.iterations = iter;
     }
-    applyMatrix(plant, transform, isLeaf) {
+    applyMatrix(city, transform, isLeaf, color) {
         let turtleIdx = this.turtleIndices.length;
-        let plantIdxLength = plant.plantIndices.length;
-        let idxNum = plant.plantIndices[plantIdxLength - 1];
-        if (plantIdxLength === 0) {
+        let cityIdxLength = city.cityIndices.length;
+        let idxNum = city.cityIndices[cityIdxLength - 1];
+        if (cityIdxLength === 0) {
             idxNum = -1;
         }
         for (let i = 0; i < turtleIdx; i++) {
             let j = this.turtleIndices[i] + idxNum + 1;
-            plant.plantIndices.push(j);
+            city.cityIndices.push(j);
         }
         let invTransT = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].create();
         __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].transpose(invTransT, transform);
@@ -15395,10 +15476,10 @@ class Turtle {
             let w = this.turtleNormals[i + 3];
             let nor = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec4 */].fromValues(x, y, z, w);
             __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec4 */].transformMat4(nor, nor, invTransT);
-            plant.plantNormals.push(nor[0]);
-            plant.plantNormals.push(nor[1]);
-            plant.plantNormals.push(nor[2]);
-            plant.plantNormals.push(nor[3]);
+            city.cityNormals.push(nor[0]);
+            city.cityNormals.push(nor[1]);
+            city.cityNormals.push(nor[2]);
+            city.cityNormals.push(nor[3]);
         }
         // transform positions according to matrix and append
         for (let i = 0; i < this.turtlePositions.length - 1; i += 4) {
@@ -15408,29 +15489,28 @@ class Turtle {
             let w = this.turtlePositions[i + 3];
             let pos = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec4 */].fromValues(x, y, z, w);
             __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec4 */].transformMat4(pos, pos, transform);
-            plant.plantPositions.push(pos[0]);
-            plant.plantPositions.push(pos[1]);
-            plant.plantPositions.push(pos[2]);
-            plant.plantPositions.push(pos[3]);
+            city.cityPositions.push(pos[0]);
+            city.cityPositions.push(pos[1]);
+            city.cityPositions.push(pos[2]);
+            city.cityPositions.push(pos[3]);
         }
-        let color = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec4 */].create();
         if (!isLeaf) {
             color = this.branchCol;
         }
-        else {
-            color = this.leafCol;
-        }
         for (let i = 0; i < this.turtlePositions.length - 1; i += 4) {
-            plant.plantColors.push(color[0], color[1], color[2], color[3]);
+            city.cityColors.push(color[0], color[1], color[2], color[3]);
         }
     }
-    getMatrix() {
+    getMatrix(position, scale) {
         let transform = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].create();
-        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].fromScaling(this.scale, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].fromValues(0.05 / this.iterations, 0.5 / this.iterations, 0.05 / this.iterations));
+        let transformLocal = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].create();
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].fromTranslation(transformLocal, position);
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].fromScaling(this.scale, scale);
         __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].fromQuat(this.rotate, this.turtleStack[this.turtleStack.length - 1].q);
         __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].fromTranslation(this.translate, this.turtleStack[this.turtleStack.length - 1].position);
         __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].multiply(transform, this.translate, this.rotate);
         __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].multiply(transform, transform, this.scale);
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].multiply(transform, transformLocal, transform);
         return transform;
     }
     getRotation() {
@@ -15445,55 +15525,101 @@ class Turtle {
         this.turtleStack[this.turtleStack.length - 1].position =
             __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].fromValues(localPos[0], localPos[1], localPos[2]);
     }
-    draw(plant, string) {
+    draw(city, string, position, scale, color) {
         for (let x = 0; x < string.length; x++) {
             let currChar = string.charAt(x);
             let topTurtle = this.turtleStack[this.turtleStack.length - 1];
             if (currChar == "A") {
                 let transformLocal = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].create();
                 __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].fromTranslation(transformLocal, [0, 1, 0]);
-                let transform = this.getMatrix();
+                let transform = this.getMatrix(position, scale);
                 __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].multiply(transform, transform, transformLocal);
-                this.applyMatrix(plant, transform, true);
+                this.applyMatrix(city, transform, true, color);
                 // update turtlestate position
-                let pos = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec4 */].fromValues(0, 1 / this.iterations, 0, 1);
+                let pos = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec4 */].fromValues(0, 2, 0, 1);
                 this.updateTurtlePosition(pos);
             }
             else if (currChar == "B") {
                 let transformLocal = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].create();
-                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].fromTranslation(transformLocal, [0, 1, 0]);
-                let transform = this.getMatrix();
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].fromTranslation(transformLocal, [0.9, 1, 0]);
+                let localScale = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].create();
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].fromScaling(localScale, [0.1, 1, 1]);
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].multiply(transformLocal, transformLocal, localScale);
+                let transform1 = this.getMatrix(position, scale);
+                let transform = transform1;
                 __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].multiply(transform, transform, transformLocal);
-                this.applyMatrix(plant, transform, false);
-                // update turtlestate position to end of branch
-                let pos = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec4 */].fromValues(0, 1 / this.iterations, 0, 1);
+                this.applyMatrix(city, transform, true, color);
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].fromTranslation(transformLocal, [-0.9, 1, 0]);
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].multiply(transformLocal, transformLocal, localScale);
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].multiply(transform, this.getMatrix(position, scale), transformLocal);
+                this.applyMatrix(city, transform, true, color);
+                // update turtlestate position
+                let pos = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec4 */].fromValues(0, 2, 0, 1);
                 this.updateTurtlePosition(pos);
             }
-            else if (currChar == "[") {
-                let pos = topTurtle.position;
-                let depth = topTurtle.depth + 1;
-                let q = topTurtle.q;
-                let q2 = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["b" /* quat */].create();
-                let rn = Math.random() * 25 + 35;
-                let rn2 = Math.random() * 10;
-                let rny = Math.random() * 180;
-                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["b" /* quat */].fromEuler(q2, rn2, rny, rn);
-                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["b" /* quat */].multiply(q2, q, q2);
-                let turt = new TurtleState(pos, q2, depth);
-                this.turtleStack.push(turt);
+            else if (currChar == "C") {
+                let transformLocal = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].create();
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].fromTranslation(transformLocal, [0, 1, 0.9]);
+                let localScale = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].create();
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].fromScaling(localScale, [1, 1, 0.1]);
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].multiply(transformLocal, transformLocal, localScale);
+                let transform1 = this.getMatrix(position, scale);
+                let transform = transform1;
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].multiply(transform, transform, transformLocal);
+                this.applyMatrix(city, transform, true, color);
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].fromTranslation(transformLocal, [0, 1, -0.9]);
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].multiply(transformLocal, transformLocal, localScale);
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].multiply(transform, this.getMatrix(position, scale), transformLocal);
+                this.applyMatrix(city, transform, true, color);
+                // update turtlestate position
+                let pos = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec4 */].fromValues(0, 2, 0, 1);
+                this.updateTurtlePosition(pos);
             }
-            else if (currChar == "]") {
-                this.turtleStack.pop();
-                let q = this.turtleStack[this.turtleStack.length - 1].q;
-                let q2 = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["b" /* quat */].create();
-                let rn = Math.random() * 25 + 35;
-                let rn2 = Math.random() * 10;
-                let rny = Math.random() * 180;
-                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["b" /* quat */].fromEuler(q2, rn2, -rny, -rn);
-                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["b" /* quat */].multiply(q2, q, q2);
-                this.turtleStack[this.turtleStack.length - 1].q = q2;
+            else if (currChar == "D") {
+                let transformLocal = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].create();
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].fromTranslation(transformLocal, [0.9, 1, 0.9]);
+                let localScale = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].create();
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].fromScaling(localScale, [0.1, 1, 0.1]);
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].multiply(transformLocal, transformLocal, localScale);
+                let transform1 = this.getMatrix(position, scale);
+                let transform = transform1;
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].multiply(transform, transform, transformLocal);
+                this.applyMatrix(city, transform, true, color);
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].fromTranslation(transformLocal, [-0.9, 1, -0.9]);
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].multiply(transformLocal, transformLocal, localScale);
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].multiply(transform, this.getMatrix(position, scale), transformLocal);
+                this.applyMatrix(city, transform, true, color);
+                // update turtlestate position
+                let pos = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec4 */].fromValues(0, 2, 0, 1);
+                this.updateTurtlePosition(pos);
             }
         }
+        this.turtleStack[this.turtleStack.length - 1].position =
+            __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].fromValues(0, 0, 0);
+    }
+    drawFloor(city) {
+        let transformLocal = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].create();
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].fromTranslation(transformLocal, [0, -0.1, 0]);
+        let localScale = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].create();
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].fromScaling(localScale, [100, 0.1, 100]);
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].multiply(transformLocal, transformLocal, localScale);
+        let transform = this.getMatrix(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].fromValues(0, 0, 0), __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].fromValues(2, 1, 2));
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat4 */].multiply(transform, transform, transformLocal);
+        let color = this.branchCol;
+        city.cityColors.push(color[0], color[1], color[2], color[3]);
+        city.cityColors.push(color[0], color[1], color[2], color[3]);
+        city.cityColors.push(color[0], color[1], color[2], color[3]);
+        city.cityColors.push(color[0], color[1], color[2], color[3]);
+        let W = 200;
+        city.cityPositions.push(W, 0, W, 1);
+        city.cityPositions.push(-W, 0, W, 1);
+        city.cityPositions.push(-W, 0, -W, 1);
+        city.cityPositions.push(W, 0, -W, 1);
+        city.cityNormals.push(0, 1, 0, 0);
+        city.cityNormals.push(0, 1, 0, 0);
+        city.cityNormals.push(0, 1, 0, 0);
+        city.cityNormals.push(0, 1, 0, 0);
+        city.cityIndices.push(0, 1, 2, 0, 2, 3);
     }
 }
 /* unused harmony export Turtle */
@@ -15504,15 +15630,78 @@ class Turtle {
 
 /***/ }),
 /* 67 */
-/***/ (function(module, exports) {
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
-module.exports = "#version 300 es\n\n//This is a vertex shader. While it is called a \"shader\" due to outdated conventions, this file\n//is used to apply matrix transformations to the arrays of vertex data passed to it.\n//Since this code is run on your GPU, each vertex is transformed simultaneously.\n//If it were run on your CPU, each vertex would have to be processed in a FOR loop, one at a time.\n//This simultaneous transformation allows your program to run much faster, especially when rendering\n//geometry with millions of vertices.\n\nuniform mat4 u_Model;       // The matrix that defines the transformation of the\n                            // object we're rendering. In this assignment,\n                            // this will be the result of traversing your scene graph.\n\nuniform mat4 u_ModelInvTr;  // The inverse transpose of the model matrix.\n                            // This allows us to transform the object's normals properly\n                            // if the object has been non-uniformly scaled.\n\nuniform mat4 u_ViewProj;    // The matrix that defines the camera's transformation.\n                            // We've written a static matrix for you to use for HW2,\n                            // but in HW3 you'll have to generate one yourself\n\nin vec4 vs_Pos;             // The array of vertex positions passed to the shader\n\nin vec4 vs_Nor;             // The array of vertex normals passed to the shader\n\nin vec4 vs_Col;             // The array of vertex colors passed to the shader.\n\nout vec4 fs_Nor;            // The array of normals that has been transformed by u_ModelInvTr. This is implicitly passed to the fragment shader.\nout vec4 fs_LightVec;       // The direction in which our virtual light lies, relative to each vertex. This is implicitly passed to the fragment shader.\nout vec4 fs_Col;            // The color of each vertex. This is implicitly passed to the fragment shader.\n\nconst vec4 lightPos = vec4(5, 5, 3, 1); //The position of our virtual light, which is used to compute the shading of\n                                        //the geometry in the fragment shader.\n\nvoid main()\n{\n    fs_Col = vs_Col;                         // Pass the vertex colors to the fragment shader for interpolation\n\n    mat3 invTranspose = mat3(u_ModelInvTr);\n    fs_Nor = vec4(invTranspose * vec3(vs_Nor), 0);          // Pass the vertex normals to the fragment shader for interpolation.\n                                                            // Transform the geometry's normals by the inverse transpose of the\n                                                            // model matrix. This is necessary to ensure the normals remain\n                                                            // perpendicular to the surface after the surface is transformed by\n                                                            // the model matrix.\n\n\n    vec4 modelposition = u_Model * vs_Pos;   // Temporarily store the transformed vertex positions for use below\n\n    fs_LightVec = lightPos - modelposition;  // Compute the direction in which the light source lies\n\n    gl_Position = u_ViewProj * modelposition;// gl_Position is a built-in variable of OpenGL which is\n                                             // used to render the final positions of the geometry's vertices\n}\n"
+"use strict";
+class Perlin {
+    constructor() { }
+    Noise(x, y) {
+        let n = x + y * 57;
+        n = (n << 13) ^ n;
+        let noise = (1 - ((n * (n * n * 15731 + 789221) + 1376312589) & 0x7fffffff) / 1073741824);
+        noise = (noise + 1) / 2;
+        return noise;
+    }
+    LinearInterpolate(a, b, x) {
+        return (a * (1.0 - x)) + b * x;
+    }
+    SmoothNoise(x, y) {
+        let corners = (this.Noise(x - 1.0, y - 1.0) +
+            this.Noise(x + 1.0, y - 1.0) +
+            this.Noise(x - 1.0, y + 1.0) +
+            this.Noise(x + 1.0, y + 1.0)) / 16.0;
+        let sides = (this.Noise(x - 1.0, y) +
+            this.Noise(x + 1.0, y) +
+            this.Noise(x, y - 1.0) +
+            this.Noise(x, y + 1.0)) / 8.0;
+        let center = this.Noise(x, y) / 4.0;
+        return corners + sides + center;
+    }
+    InterpolateNoise(x, y) {
+        let integer_X = Math.floor(x);
+        let fractional_X = Math.abs(x - integer_X);
+        let integer_Y = Math.floor(y);
+        let fractional_Y = Math.abs(y - integer_Y);
+        let v1 = this.SmoothNoise(integer_X, integer_Y);
+        let v2 = this.SmoothNoise(integer_X + 1.0, integer_Y);
+        let v3 = this.SmoothNoise(integer_X, integer_Y + 1.0);
+        let v4 = this.SmoothNoise(integer_X + 1.0, integer_Y + 1.0);
+        let i1 = this.LinearInterpolate(v1, v2, fractional_X);
+        let i2 = this.LinearInterpolate(v3, v4, fractional_X);
+        return this.LinearInterpolate(i1, i2, fractional_Y);
+    }
+    PerlinNoise(x, y, c) {
+        x = x * c;
+        y = y * c;
+        let total = 0.0;
+        let p = 0.5;
+        // number of octaves
+        let n = 6;
+        let max = 1.4;
+        for (let i = 0; i < n; i++) {
+            let frequency = Math.pow(2.0, i);
+            let amplitude = Math.pow(p, i);
+            total = total + this.InterpolateNoise(x * frequency, y * frequency) * amplitude;
+        }
+        return (total / max);
+    }
+}
+/* unused harmony export Perlin */
+
+/* harmony default export */ __webpack_exports__["a"] = (Perlin);
+
 
 /***/ }),
 /* 68 */
 /***/ (function(module, exports) {
 
-module.exports = "#version 300 es\n\n// This is a fragment shader. If you've opened this file first, please\n// open and read lambert.vert.glsl before reading on.\n// Unlike the vertex shader, the fragment shader actually does compute\n// the shading of geometry. For every pixel in your program's output\n// screen, the fragment shader is run for every bit of geometry that\n// particular pixel overlaps. By implicitly interpolating the position\n// data passed into the fragment shader by the vertex shader, the fragment shader\n// can compute what color to apply to its pixel based on things like vertex\n// position, light position, and vertex color.\nprecision highp float;\n\nuniform vec4 u_Color; // The color with which to render this instance of geometry.\n\n// These are the interpolated values out of the rasterizer, so you can't know\n// their specific values without knowing the vertices that contributed to them\nin vec4 fs_Nor;\nin vec4 fs_LightVec;\nin vec4 fs_Col;\n\nout vec4 out_Col; // This is the final output color that you will see on your\n                  // screen for the pixel that is currently being processed.\n\nvoid main()\n{\n    // Material base color (before shading)\n        vec4 diffuseColor = fs_Col;\n\n        // Calculate the diffuse term for Lambert shading\n        float diffuseTerm = dot(normalize(fs_Nor), normalize(fs_LightVec));\n        // Avoid negative lighting values\n        // diffuseTerm = clamp(diffuseTerm, 0, 1);\n\n        float ambientTerm = 0.2;\n\n        float lightIntensity = diffuseTerm + ambientTerm;   //Add a small float value to the color multiplier\n                                                            //to simulate ambient lighting. This ensures that faces that are not\n                                                            //lit by our point light are not completely black.\n\n        // Compute final shaded color\n        out_Col = vec4(diffuseColor.rgb * lightIntensity, diffuseColor.a);\n}\n"
+module.exports = "#version 300 es\n\n//This is a vertex shader. While it is called a \"shader\" due to outdated conventions, this file\n//is used to apply matrix transformations to the arrays of vertex data passed to it.\n//Since this code is run on your GPU, each vertex is transformed simultaneously.\n//If it were run on your CPU, each vertex would have to be processed in a FOR loop, one at a time.\n//This simultaneous transformation allows your program to run much faster, especially when rendering\n//geometry with millions of vertices.\n\nuniform mat4 u_Model;       // The matrix that defines the transformation of the\n                            // object we're rendering. In this assignment,\n                            // this will be the result of traversing your scene graph.\n\nuniform mat4 u_ModelInvTr;  // The inverse transpose of the model matrix.\n                            // This allows us to transform the object's normals properly\n                            // if the object has been non-uniformly scaled.\n\nuniform mat4 u_ViewProj;    // The matrix that defines the camera's transformation.\n                            // We've written a static matrix for you to use for HW2,\n                            // but in HW3 you'll have to generate one yourself\n\nin vec4 vs_Pos;             // The array of vertex positions passed to the shader\n\nin vec4 vs_Nor;             // The array of vertex normals passed to the shader\n\nin vec4 vs_Col;             // The array of vertex colors passed to the shader.\n\nout vec4 fs_Nor;            // The array of normals that has been transformed by u_ModelInvTr. This is implicitly passed to the fragment shader.\nout vec4 fs_LightVec;       // The direction in which our virtual light lies, relative to each vertex. This is implicitly passed to the fragment shader.\nout vec4 fs_Col;            // The color of each vertex. This is implicitly passed to the fragment shader.\n\nconst vec4 lightPos = vec4(30, 40, 30, 1); //The position of our virtual light, which is used to compute the shading of\n                                        //the geometry in the fragment shader.\n\nvoid main()\n{\n    fs_Col = vs_Col;                         // Pass the vertex colors to the fragment shader for interpolation\n\n    mat3 invTranspose = mat3(u_ModelInvTr);\n    fs_Nor = vec4(invTranspose * vec3(vs_Nor), 0);          // Pass the vertex normals to the fragment shader for interpolation.\n                                                            // Transform the geometry's normals by the inverse transpose of the\n                                                            // model matrix. This is necessary to ensure the normals remain\n                                                            // perpendicular to the surface after the surface is transformed by\n                                                            // the model matrix.\n\n\n    vec4 modelposition = u_Model * vs_Pos;   // Temporarily store the transformed vertex positions for use below\n\n    fs_LightVec = lightPos - modelposition;  // Compute the direction in which the light source lies\n    // fs_LightVec = vec4(0,100,0,0);\n\n    gl_Position = u_ViewProj * modelposition;// gl_Position is a built-in variable of OpenGL which is\n                                             // used to render the final positions of the geometry's vertices\n}\n"
+
+/***/ }),
+/* 69 */
+/***/ (function(module, exports) {
+
+module.exports = "#version 300 es\n\n// This is a fragment shader. If you've opened this file first, please\n// open and read lambert.vert.glsl before reading on.\n// Unlike the vertex shader, the fragment shader actually does compute\n// the shading of geometry. For every pixel in your program's output\n// screen, the fragment shader is run for every bit of geometry that\n// particular pixel overlaps. By implicitly interpolating the position\n// data passed into the fragment shader by the vertex shader, the fragment shader\n// can compute what color to apply to its pixel based on things like vertex\n// position, light position, and vertex color.\nprecision highp float;\n\nuniform vec4 u_Color; // The color with which to render this instance of geometry.\n\n// These are the interpolated values out of the rasterizer, so you can't know\n// their specific values without knowing the vertices that contributed to them\nin vec4 fs_Nor;\nin vec4 fs_LightVec;\nin vec4 fs_Col;\n\nout vec4 out_Col; // This is the final output color that you will see on your\n                  // screen for the pixel that is currently being processed.\n\nvoid main()\n{\n    // Material base color (before shading)\n        vec4 diffuseColor = fs_Col;\n\n        // Calculate the diffuse term for Lambert shading\n        float diffuseTerm = dot(normalize(fs_Nor), normalize(fs_LightVec));\n        // Avoid negative lighting values\n        // diffuseTerm = clamp(diffuseTerm, 0, 1);\n\n        float ambientTerm = 0.4;\n\n        float lightIntensity = diffuseTerm + ambientTerm;   //Add a small float value to the color multiplier\n                                                            //to simulate ambient lighting. This ensures that faces that are not\n                                                            //lit by our point light are not completely black.\n\n        // Compute final shaded color\n        out_Col = vec4(diffuseColor.rgb * lightIntensity, diffuseColor.a);\n}\n"
 
 /***/ })
 /******/ ]);
