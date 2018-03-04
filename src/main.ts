@@ -18,10 +18,10 @@ const controls = {
   tesselations: 5,
   'Load Scene': loadScene, // A function pointer, essentially
   axiom: 'A',
-  branch: [108.0, 186.0, 115.0],
-  leaf: [133.0, 108.0, 187.0],
+  branch: [150.0, 150.0, 160.0],
+  leaf: [33.0, 100.0, 240.0],
   shader: 'lambert',
-  iterations: 4,
+  iterations: 8,
 };
 
 let icosphere: Icosphere;
@@ -47,6 +47,7 @@ function loadLSystem(lsystem: LSystem) {
 
     // Fill mesh
     let turtle : Turtle = new Turtle(col1, col2, controls.iterations);
+    turtle.drawFloor(city);
     turtle.draw(city, lsystem.LinkedListToString(lsystem.axiom));
     city.create();
 }

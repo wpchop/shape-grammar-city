@@ -185,10 +185,12 @@ export class Turtle {
     }
   }
 
-  getMatrix() {
+  getMatrix(position: vec3) {
     let transform : mat4 = mat4.create();
 
-    // mat4.fromScaling(this.scale, vec3.fromValues(0.05 / this.iterations, 0.5 / this.iterations,0.05/ this.iterations));
+    let transformLocal : mat4 = mat4.create();
+    mat4.fromTranslation(transformLocal, position);
+
     mat4.fromScaling(this.scale, vec3.fromValues(1,1,1));    
     mat4.fromQuat(this.rotate, this.turtleStack[this.turtleStack.length - 1].q);
     mat4.fromTranslation(this.translate, this.turtleStack[this.turtleStack.length - 1].position);
@@ -213,7 +215,7 @@ export class Turtle {
   }
 
   draw(city: City, string: string) {
-    string = "ABA";
+    let position = vec3.fromValues(0,5,0);
     for (let x = 0; x < string.length; x++) {
       let currChar = string.charAt(x);
       let topTurtle = this.turtleStack[this.turtleStack.length - 1];
@@ -222,7 +224,7 @@ export class Turtle {
         let transformLocal = mat4.create();
         mat4.fromTranslation(transformLocal,[0,1,0]);
 
-        let transform = this.getMatrix();
+        let transform = this.getMatrix(position);
         mat4.multiply(transform, transform, transformLocal);
         this.applyMatrix(city, transform, true);
 
@@ -231,22 +233,104 @@ export class Turtle {
         this.updateTurtlePosition(pos);
         
       } else if (currChar == "B") {
-          let transformLocal = mat4.create();
-          mat4.fromTranslation(transformLocal,[0,1,0]);
+        let transformLocal = mat4.create();
+        mat4.fromTranslation(transformLocal,[0.9,1,0]);
 
-          let localScale = mat4.create();
-          mat4.fromScaling(localScale, [0.5,1,0.5]);
+        let localScale = mat4.create();
+        mat4.fromScaling(localScale, [0.1,1,1]);
 
-          mat4.multiply(transformLocal, transformLocal, localScale);
-          let transform = this.getMatrix();
-          mat4.multiply(transform, transform, transformLocal);
-          this.applyMatrix(city, transform, true);
+        mat4.multiply(transformLocal, transformLocal, localScale);
+        let transform1 = this.getMatrix(position);
+        let transform = transform1;
+        mat4.multiply(transform, transform, transformLocal);
+        this.applyMatrix(city, transform, true);
 
-          // update turtlestate position
-          let pos = vec4.fromValues(-5,2,3,1);
-          this.updateTurtlePosition(pos);
+        mat4.fromTranslation(transformLocal,[-0.9,1,0]);
+        mat4.multiply(transformLocal, transformLocal, localScale);
+        mat4.multiply(transform, this.getMatrix(position), transformLocal);
+        this.applyMatrix(city, transform, true);
+
+        // update turtlestate position
+        let pos = vec4.fromValues(0,2,0,1);
+        this.updateTurtlePosition(pos);
+      } else if (currChar == "C") {
+        let transformLocal = mat4.create();
+        mat4.fromTranslation(transformLocal,[0,1,0.9]);
+
+        let localScale = mat4.create();
+        mat4.fromScaling(localScale, [1,1,0.1]);
+
+        mat4.multiply(transformLocal, transformLocal, localScale);
+        let transform1 = this.getMatrix(position);
+        let transform = transform1;
+        mat4.multiply(transform, transform, transformLocal);
+        this.applyMatrix(city, transform, true);
+
+        mat4.fromTranslation(transformLocal,[0,1,-0.9]);
+        mat4.multiply(transformLocal, transformLocal, localScale);
+        mat4.multiply(transform, this.getMatrix(position), transformLocal);
+        this.applyMatrix(city, transform, true);
+
+        // update turtlestate position
+        let pos = vec4.fromValues(0,2,0,1);
+        this.updateTurtlePosition(pos);
+      } else if (currChar == "D") {
+        let transformLocal = mat4.create();
+        mat4.fromTranslation(transformLocal,[0.9,1,0.9]);
+
+        let localScale = mat4.create();
+        mat4.fromScaling(localScale, [0.1,1,0.1]);
+
+        mat4.multiply(transformLocal, transformLocal, localScale);
+        let transform1 = this.getMatrix(position);
+        let transform = transform1;
+        mat4.multiply(transform, transform, transformLocal);
+        this.applyMatrix(city, transform, true);
+
+        mat4.fromTranslation(transformLocal,[-0.9,1,-0.9]);
+        mat4.multiply(transformLocal, transformLocal, localScale);
+        mat4.multiply(transform, this.getMatrix(position), transformLocal);
+        this.applyMatrix(city, transform, true);
+
+        // update turtlestate position
+        let pos = vec4.fromValues(0,2,0,1);
+        this.updateTurtlePosition(pos);
       }
     }
+  }
+
+  drawFloor(city: City) {
+    let transformLocal = mat4.create();
+    mat4.fromTranslation(transformLocal,[0,-0.1,0]);
+
+    let localScale = mat4.create();
+    mat4.fromScaling(localScale, [100,0.1,100]);
+
+    mat4.multiply(transformLocal, transformLocal, localScale);
+    let transform = this.getMatrix(vec3.fromValues(0,0,0));
+    mat4.multiply(transform, transform, transformLocal);
+    // this.applyMatrix(city, transform, true);
+
+    let color = this.branchCol;
+    city.cityColors.push(color[0], color[1], color[2], color[3]);
+    city.cityColors.push(color[0], color[1], color[2], color[3]);
+    city.cityColors.push(color[0], color[1], color[2], color[3]);
+    city.cityColors.push(color[0], color[1], color[2], color[3]);
+
+    let W = 100;
+    
+    city.cityPositions.push( W,-2, W,1);
+    city.cityPositions.push(-W,-2, W,1);
+    city.cityPositions.push(-W,-2,-W,1);
+    city.cityPositions.push( W,-2,-W,1);
+
+    city.cityNormals.push(0,1,0,0);
+    city.cityNormals.push(0,1,0,0);
+    city.cityNormals.push(0,1,0,0);
+    city.cityNormals.push(0,1,0,0);
+
+    city.cityIndices.push(0,1,2,0,2,3);
+    
   }
 
 };
